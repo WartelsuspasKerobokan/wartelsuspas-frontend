@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'; // Tambahkan useRef
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase-config';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -11,11 +11,9 @@ function AdminDashboard() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // --- PENAMBAHAN STATE UNTUK KONTROL BEEP DI ADMIN DASHBOARD ---
-  const audioRef = useRef(null); // Untuk menyimpan instance Audio
-  const beepTimeoutRef = useRef(null); // Untuk menyimpan ID setTimeout untuk menghentikan beep
-  const [audioUnlocked, setAudioUnlocked] = useState(false); // State untuk melacak status unlock audio
-  // --- AKHIR PENAMBAHAN STATE ---
+  const audioRef = useRef(null);
+  const beepTimeoutRef = useRef(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -39,11 +37,10 @@ function AdminDashboard() {
                 newTimers[v.id] = v.remainingTime;
             }
           } else {
-            // Jika sesi tidak aktif, sudah digunakan, atau dihentikan, hapus dari timer lokal
             delete newTimers[v.id];
 
-            // --- HENTIKAN BEEP JIKA SESI BERHENTI/DIHAPUS DARI LUAR ---
-            if (audioRef.current && audioRef.current._voucherId === v.id) { // Cek jika beep ini untuk voucher yang sama
+            // Hentikan beep jika sesi berhenti/dihapus dari luar
+            if (audioRef.current && audioRef.current._voucherId === v.id) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
                 audioRef.current = null;
@@ -52,7 +49,6 @@ function AdminDashboard() {
                     beepTimeoutRef.current = null;
                 }
             }
-            // --- AKHIR HENTIKAN BEEP ---
           }
         });
         Object.keys(newTimers).forEach(timerId => {
@@ -78,7 +74,7 @@ function AdminDashboard() {
       setLocalTimers(prev => {
         const updatedTimers = { ...prev };
         Object.keys(updatedTimers).forEach(id => {
-          // --- LOGIKA BEEP DI SINI KETIKA TIMER MENCAPAI 0 ---
+          // Logika beep di sini ketika timer mencapai 0
           if (updatedTimers[id] === 1 && audioUnlocked) { // Akan 0 di detik berikutnya
             if (!audioRef.current) { // Hanya putar jika belum ada beep lain yang aktif
               audioRef.current = new Audio('/assets/beep.mp3');
@@ -97,7 +93,6 @@ function AdminDashboard() {
               }, 15000); // 15 detik
             }
           }
-          // --- AKHIR LOGIKA BEEP ---
 
           if (updatedTimers[id] > 0) {
             updatedTimers[id] -= 1;
@@ -114,7 +109,7 @@ function AdminDashboard() {
       unsubscribeVouchers();
       clearInterval(interval);
 
-      // --- CLEANUP BEEP PADA UNMOUNT ---
+      // CLEANUP BEEP PADA UNMOUNT
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -124,9 +119,8 @@ function AdminDashboard() {
         clearTimeout(beepTimeoutRef.current);
         beepTimeoutRef.current = null;
       }
-      // --- AKHIR CLEANUP BEEP ---
     };
-  }, [navigate, audioUnlocked]); // Tambahkan audioUnlocked ke dependencies
+  }, [navigate, audioUnlocked]);
 
   const handleStopSession = async (voucherId, currentRemainingTime) => {
     try {
@@ -199,7 +193,6 @@ function AdminDashboard() {
 
 
   return (
-    // Tambahkan onClick ke div paling luar untuk memicu unlockAudioContext
     <div className="min-h-screen flex flex-col items-center bg-gray-100 p-4" onClick={unlockAudioContext}>
       <div className="absolute top-4 right-4">
         <button

@@ -17,30 +17,25 @@ function VoucherInput() {
 
   const audioRef = useRef(null);
   const beepTimeoutRef = useRef(null);
-  const [audioUnlocked, setAudioUnlocked] = useState(false); // State baru untuk melacak status unlock audio
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // --- PERBAIKAN UTAMA: Mencoba membuka kunci audio context pada interaksi pengguna ---
+      // Mencoba membuka kunci audio context pada interaksi pengguna pertama
       if (!audioUnlocked) {
         const silentAudio = new Audio();
-        // Gunakan MP3 data URI yang sangat singkat dan senyap. Ini seringkali cukup untuk membuka kunci.
         silentAudio.src = 'data:audio/mpeg;base64,SUQzBAAAAAAAIExBTUUzLjEwMFVVVVVVVUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVWVjMTEyVVVVVVVVVVVVVXVWdnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADEuMTAw';
-        silentAudio.volume = 0; // Pastikan suaranya senyap
+        silentAudio.volume = 0;
 
         silentAudio.play().then(() => {
           setAudioUnlocked(true);
           console.log("Audio context berhasil dibuka kuncinya.");
         }).catch(err => {
           console.warn("Gagal membuka kunci audio context (mungkin sudah dibuka atau ada kebijakan blocking lain):", err);
-          // Jika gagal, set audioUnlocked ke true agar tidak mencoba lagi dan log masalahnya.
-          // Atau bisa juga tetap false dan mencoba lagi di interaksi berikutnya jika diperlukan.
-          // Untuk saat ini, kita anggap interaksi pertama sudah dicoba.
-          setAudioUnlocked(true); // Asumsikan berhasil setelah percobaan pertama untuk tidak memblokir
+          setAudioUnlocked(true); // Asumsikan berhasil setelah percobaan pertama
         });
       }
-      // --- AKHIR PERBAIKAN UTAMA ---
 
       const response = await axios.post('http://localhost:3001/validate-voucher', { code });
       setTimer(response.data.remainingTime);
@@ -112,6 +107,7 @@ function VoucherInput() {
 
           setTimer(currentRemainingTime);
 
+          // Kondisi utama untuk sesi berhenti: sessionStartTime adalah null
           const isSessionStopped = data.sessionStartTime === null;
 
           if (isSessionStopped) {
@@ -160,7 +156,7 @@ function VoucherInput() {
           if (prevTimer > 0) {
             return prevTimer - 1;
           } else if (prevTimer === 0) {
-            // --- LOGIKA BEEP DENGAN BATASAN DURASI & CEK UNLOCK AUDIO ---
+            // Logika beep dengan batasan durasi & cek unlock audio
             // Hanya putar jika belum berbunyi DAN audio context sudah dibuka
             if (!audioRef.current && audioUnlocked) {
               audioRef.current = new Audio('/assets/beep.mp3');
@@ -178,9 +174,7 @@ function VoucherInput() {
               }, 15000); // 15 detik
             } else if (!audioUnlocked) {
               console.warn("Suara beep tidak diputar: konteks audio belum dibuka oleh interaksi pengguna.");
-              // Opsional: tampilkan pesan ke user untuk memastikan mereka mengklik sesuatu.
             }
-            // --- AKHIR LOGIKA BEEP ---
 
             // Kirim sinyal ke backend bahwa waktu sudah habis
             axios.post('http://localhost:3001/stop-session', { voucherId, remainingTime: 0 })
@@ -203,7 +197,7 @@ function VoucherInput() {
       if (unsubscribe) unsubscribe();
       if (interval) clearInterval(interval);
 
-      // --- CLEANUP BEEP PADA UNMOUNT ---
+      // CLEANUP BEEP PADA UNMOUNT
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -213,9 +207,8 @@ function VoucherInput() {
         clearTimeout(beepTimeoutRef.current);
         beepTimeoutRef.current = null;
       }
-      // --- AKHIR CLEANUP BEEP ---
     };
-  }, [isValidVoucher, voucherId, navigate, audioUnlocked]); // Tambahkan audioUnlocked ke dependencies
+  }, [isValidVoucher, voucherId, navigate, audioUnlocked]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">

@@ -65,7 +65,7 @@ function Reports() {
     }
   };
 
-  // --- Fungsi pembantu untuk format durasi/waktu (sama seperti di AdminDashboard) ---
+  // --- Fungsi pembantu untuk format durasi/waktu ---
   const formatDuration = (totalSeconds) => {
     if (totalSeconds === 0) return '0 detik';
 
@@ -95,7 +95,7 @@ function Reports() {
         Status: v.used ? 'Selesai' : v.sessionStartTime ? 'Aktif' : 'Belum Digunakan',
         'No. Telepon': v.phoneNumber,
         Relasi: v.relation,
-        'Durasi': formatDuration(v.duration), // --- PERBAIKAN DI SINI ---
+        'Durasi': formatDuration(v.duration),
         Dibuat: v.createdAt ? v.createdAt.toDate().toLocaleString() : 'N/A'
       }))
     ]);
@@ -109,7 +109,7 @@ function Reports() {
     doc.text(`Laporan Penjualan Voucher - ${getDateIndicator().text}`, 14, 20);
     autoTable(doc, {
       startY: 30,
-      head: [['Kode', 'Nama WBP', 'Kamar', 'Harga', 'Status', 'No. Telepon', 'Relasi', 'Durasi', 'Dibuat']], // --- PERBAIKAN DI SINI ---
+      head: [['Kode', 'Nama WBP', 'Kamar', 'Harga', 'Status', 'No. Telepon', 'Relasi', 'Durasi', 'Dibuat']],
       body: vouchers.map(v => [
         v.code,
         v.wbpName,
@@ -118,7 +118,7 @@ function Reports() {
         v.used ? 'Selesai' : v.sessionStartTime ? 'Aktif' : 'Belum Digunakan',
         v.phoneNumber,
         v.relation,
-        formatDuration(v.duration), // --- PERBAIKAN DI SINI ---
+        formatDuration(v.duration),
         v.createdAt ? v.createdAt.toDate().toLocaleString() : 'N/A'
       ])
     });
@@ -285,7 +285,6 @@ function Reports() {
               </td>
               <td className="p-2">{v.phoneNumber}</td>
               <td className="p-2">{v.relation}</td>
-              {/* --- PERBAIKAN: Tampilkan durasi menggunakan formatDuration --- */}
               <td className="p-2">
                 {formatDuration(v.duration)}
               </td>

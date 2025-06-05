@@ -16,7 +16,7 @@ function VoucherGenerator() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  // --- PERBAIKAN: Semua durasi sekarang dalam DETIK ---
+  // --- Semua durasi didefinisikan dalam DETIK ---
   const durationOptions = [
     { duration: 5, cost: 500, label: '5 Detik - Rp500 (untuk pengujian)' }, // 5 detik
     { duration: 5 * 60, cost: 2500, label: '5 Menit - Rp2.500' }, // 300 detik
@@ -25,7 +25,7 @@ function VoucherGenerator() {
     { duration: 20 * 60, cost: 10000, label: '20 Menit - Rp10.000' }, // 1200 detik
     { duration: 30 * 60, cost: 15000, label: '30 Menit - Rp15.000' }  // 1800 detik
   ];
-  // --- AKHIR PERBAIKAN ---
+  // --- Akhir definisi durasi ---
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,7 +37,6 @@ function VoucherGenerator() {
       }
       const token = await user.getIdToken();
       // Durasi yang dikirim ke backend sudah dalam detik
-      // parseFloat(formData.duration) akan mengkonversi string "5", "300", dll. ke angka
       const durationInSeconds = parseFloat(formData.duration);
       const response = await axios.post('http://localhost:3001/generate-voucher', {
         ...formData,
