@@ -17,16 +17,17 @@ function VoucherInput() {
 
   const audioRef = useRef(null);
   const beepTimeoutRef = useRef(null);
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false); // State untuk melacak status unlock audio
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Mencoba membuka kunci audio context pada interaksi pengguna pertama
+      // Mencoba membuka kunci audio context pada interaksi pengguna pertama (saat submit voucher)
       if (!audioUnlocked) {
         const silentAudio = new Audio();
+        // Menggunakan data URI MP3 senyap yang sangat singkat untuk memicu interaksi audio
         silentAudio.src = 'data:audio/mpeg;base64,SUQzBAAAAAAAIExBTUUzLjEwMFVVVVVVVUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVWVjMTEyVVVVVVVVVVVVVXVWdnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADEuMTAw';
-        silentAudio.volume = 0;
+        silentAudio.volume = 0; // Pastikan suaranya senyap
 
         silentAudio.play().then(() => {
           setAudioUnlocked(true);
@@ -37,7 +38,7 @@ function VoucherInput() {
         });
       }
 
-      const response = await axios.post('http://localhost:3001/validate-voucher', { code });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/validate-voucher`, { code }); // Menggunakan variabel lingkungan untuk URL API
       setTimer(response.data.remainingTime);
       setVoucherId(response.data.voucherId);
       setMessage('');
@@ -70,7 +71,7 @@ function VoucherInput() {
     }
 
     try {
-      await axios.post('http://localhost:3001/stop-session', { voucherId, remainingTime: timer });
+      await axios.post(`${process.env.REACT_APP_API_URL}/stop-session`, { voucherId, remainingTime: timer }); // Menggunakan variabel lingkungan untuk URL API
       setMessage('Sesi dihentikan, sisa waktu tersimpan');
       setIsValidVoucher(false);
       setPhoneNumber('');
@@ -177,7 +178,7 @@ function VoucherInput() {
             }
 
             // Kirim sinyal ke backend bahwa waktu sudah habis
-            axios.post('http://localhost:3001/stop-session', { voucherId, remainingTime: 0 })
+            axios.post(`${process.env.REACT_APP_API_URL}/stop-session`, { voucherId, remainingTime: 0 }) // Menggunakan variabel lingkungan untuk URL API
               .then(() => console.log('Session ended gracefully by timer.'))
               .catch(err => console.error('Error sending end session signal:', err));
 

@@ -38,6 +38,7 @@ function Reports() {
       const snapshot = await getDocs(vouchersCollection);
       let voucherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+      // Logika filter laporan
       if (filter === 'today') {
         const today = new Date();
         voucherList = voucherList.filter(v =>
@@ -84,6 +85,7 @@ function Reports() {
   };
   // --- Akhir fungsi pembantu ---
 
+  // Fungsi untuk ekspor laporan ke Excel
   const exportToExcel = () => {
     const ws = utils.json_to_sheet([
       { '': `Laporan Penjualan Voucher - ${getDateIndicator().text}` },
@@ -95,7 +97,7 @@ function Reports() {
         Status: v.used ? 'Selesai' : v.sessionStartTime ? 'Aktif' : 'Belum Digunakan',
         'No. Telepon': v.phoneNumber,
         Relasi: v.relation,
-        'Durasi': formatDuration(v.duration),
+        'Durasi': formatDuration(v.duration), // Menggunakan formatDuration untuk ekspor
         Dibuat: v.createdAt ? v.createdAt.toDate().toLocaleString() : 'N/A'
       }))
     ]);
@@ -104,6 +106,7 @@ function Reports() {
     writeFile(wb, `Laporan_Voucher_${getDateIndicator().text.replace(/\s/g, '_')}.xlsx`);
   };
 
+  // Fungsi untuk ekspor laporan ke PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text(`Laporan Penjualan Voucher - ${getDateIndicator().text}`, 14, 20);
@@ -118,13 +121,14 @@ function Reports() {
         v.used ? 'Selesai' : v.sessionStartTime ? 'Aktif' : 'Belum Digunakan',
         v.phoneNumber,
         v.relation,
-        formatDuration(v.duration),
+        formatDuration(v.duration), // Menggunakan formatDuration untuk ekspor
         v.createdAt ? v.createdAt.toDate().toLocaleString() : 'N/A'
       ])
     });
     doc.save(`Laporan_Voucher_${getDateIndicator().text.replace(/\s/g, '_')}.pdf`);
   };
 
+  // Fungsi untuk mendapatkan indikator tanggal/bulan/tahun untuk laporan
   const getDateIndicator = () => {
     const now = new Date();
     if (filter === 'today') {
@@ -155,6 +159,7 @@ function Reports() {
     }
   };
 
+  // Handler untuk logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -286,7 +291,7 @@ function Reports() {
               <td className="p-2">{v.phoneNumber}</td>
               <td className="p-2">{v.relation}</td>
               <td className="p-2">
-                {formatDuration(v.duration)}
+                {formatDuration(v.duration)} {/* Menampilkan durasi menggunakan formatDuration */}
               </td>
               <td className="p-2">
                 {v.createdAt ? v.createdAt.toDate().toLocaleString() : 'N/A'}

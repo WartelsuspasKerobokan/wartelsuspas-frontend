@@ -38,7 +38,7 @@ function VoucherGenerator() {
       const token = await user.getIdToken();
       // Durasi yang dikirim ke backend sudah dalam detik
       const durationInSeconds = parseFloat(formData.duration);
-      const response = await axios.post('http://localhost:3001/generate-voucher', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/generate-voucher`, { // Menggunakan variabel lingkungan untuk URL API
         ...formData,
         duration: durationInSeconds // Kirim durasi dalam detik ke backend
       }, {

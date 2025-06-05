@@ -13,7 +13,7 @@ function AdminDashboard() {
 
   const audioRef = useRef(null);
   const beepTimeoutRef = useRef(null);
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false); // State untuk melacak status unlock audio
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -32,15 +32,17 @@ function AdminDashboard() {
       setLocalTimers(prevTimers => {
         const newTimers = { ...prevTimers };
         voucherList.forEach(v => {
+          // Jika sesi aktif, tambahkan/pertahankan di timer lokal
           if (v.sessionStartTime && v.remainingTime > 0 && !v.used && !v.terminatedAt) {
             if (newTimers[v.id] === undefined || newTimers[v.id] !== v.remainingTime) {
                 newTimers[v.id] = v.remainingTime;
             }
           } else {
+            // Jika sesi tidak aktif, sudah digunakan, atau dihentikan, hapus dari timer lokal
             delete newTimers[v.id];
 
             // Hentikan beep jika sesi berhenti/dihapus dari luar
-            if (audioRef.current && audioRef.current._voucherId === v.id) {
+            if (audioRef.current && audioRef.current._voucherId === v.id) { // Cek jika beep ini untuk voucher yang sama
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
                 audioRef.current = null;
@@ -51,6 +53,7 @@ function AdminDashboard() {
             }
           }
         });
+        // Hapus juga timer yang tidak lagi ada di voucherList (mungkin voucher dihapus)
         Object.keys(newTimers).forEach(timerId => {
           if (!voucherList.some(v => v.id === timerId)) {
             delete newTimers[timerId];
@@ -70,12 +73,13 @@ function AdminDashboard() {
       }
     });
 
+    // Interval untuk mengurangi timer lokal setiap detik
     const interval = setInterval(() => {
       setLocalTimers(prev => {
         const updatedTimers = { ...prev };
         Object.keys(updatedTimers).forEach(id => {
           // Logika beep di sini ketika timer mencapai 0
-          if (updatedTimers[id] === 1 && audioUnlocked) { // Akan 0 di detik berikutnya
+          if (updatedTimers[id] === 1 && audioUnlocked) { // Akan menjadi 0 di detik berikutnya
             if (!audioRef.current) { // Hanya putar jika belum ada beep lain yang aktif
               audioRef.current = new Audio('/assets/beep.mp3');
               audioRef.current.loop = true; // Putar berulang
@@ -120,11 +124,12 @@ function AdminDashboard() {
         beepTimeoutRef.current = null;
       }
     };
-  }, [navigate, audioUnlocked]);
+  }, [navigate, audioUnlocked]); // audioUnlocked sebagai dependency
 
+  // Handler untuk menghentikan sesi secara manual dari admin
   const handleStopSession = async (voucherId, currentRemainingTime) => {
     try {
-      await axios.post('http://localhost:3001/stop-session', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/stop-session`, { // Menggunakan variabel lingkungan untuk URL API
         voucherId,
         remainingTime: currentRemainingTime
       });
@@ -144,6 +149,7 @@ function AdminDashboard() {
     }
   };
 
+  // Handler untuk logout admin
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -154,7 +160,7 @@ function AdminDashboard() {
     }
   };
 
-  // --- Fungsi pembantu untuk format durasi/waktu ---
+  // Fungsi pembantu untuk format durasi/waktu (misal: "10 menit 30 detik")
   const formatDuration = (totalSeconds) => {
     if (totalSeconds === 0) return '0 detik';
 
@@ -173,12 +179,13 @@ function AdminDashboard() {
   };
   // --- Akhir fungsi pembantu ---
 
-  // --- FUNGSI UNTUK MEMBUKA KUNCI AUDIO CONTEXT ---
+  // Fungsi untuk mencoba membuka kunci audio context browser
   const unlockAudioContext = () => {
     if (!audioUnlocked) {
       const silentAudio = new Audio();
+      // Menggunakan data URI MP3 senyap yang sangat singkat untuk memicu interaksi audio
       silentAudio.src = 'data:audio/mpeg;base64,SUQzBAAAAAAAIExBTUUzLjEwMFVVVVVVVUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVWVjMTEyVVVVVVVVVVVVVXVWdnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADEuMTAw';
-      silentAudio.volume = 0;
+      silentAudio.volume = 0; // Pastikan suaranya senyap
 
       silentAudio.play().then(() => {
         setAudioUnlocked(true);
@@ -189,10 +196,9 @@ function AdminDashboard() {
       });
     }
   };
-  // --- AKHIR FUNGSI UNLOCK AUDIO CONTEXT ---
-
 
   return (
+    // Menambahkan onClick ke div paling luar untuk memicu unlockAudioContext
     <div className="min-h-screen flex flex-col items-center bg-gray-100 p-4" onClick={unlockAudioContext}>
       <div className="absolute top-4 right-4">
         <button
@@ -251,7 +257,7 @@ function AdminDashboard() {
               <td className="p-2">{v.room}</td>
               <td className="p-2">{v.phoneNumber}</td>
               <td className="p-2">{v.relation}</td>
-              <td className="p-2">{formatDuration(v.duration)}</td>
+              <td className="p-2">{formatDuration(v.duration)}</td> {/* Menampilkan durasi menggunakan formatDuration */}
               <td className="p-2">Rp {v.cost}</td>
               <td className="p-2">
                 {v.createdAt ? v.createdAt.toDate().toLocaleString() : 'N/A'}
@@ -261,7 +267,7 @@ function AdminDashboard() {
               </td>
               <td className="p-2">
                 {v.sessionStartTime && !v.terminatedAt && v.remainingTime > 0
-                  ? formatDuration(localTimers[v.id] !== undefined ? localTimers[v.id] : v.remainingTime)
+                  ? formatDuration(localTimers[v.id] !== undefined ? localTimers[v.id] : v.remainingTime) // Menampilkan sisa waktu menggunakan formatDuration
                   : '-'}
               </td>
               <td className="p-2">
